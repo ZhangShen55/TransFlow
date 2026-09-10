@@ -1,5 +1,5 @@
 {
-  "generated_at_unix": 1789035322,
+  "generated_at_unix": 1789038407,
   "workload": {
     "concurrency": 64,
     "request_count_per_candidate": 128,
@@ -308,6 +308,183 @@
       "service_healthy_after": true,
       "max_num_seqs": 512,
       "batch_workers": 16
+    },
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 128,
+      "text_items": 60,
+      "nonempty_items": 60,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 93.254,
+      "throughput_requests_per_second": 1.373,
+      "latency_ms": {
+        "min": 4084.16,
+        "p50": 45976.864,
+        "p95": 47323.192,
+        "p99": 47334.353,
+        "max": 47336.7
+      },
+      "queue_wait_seconds": {
+        "observations": 46080,
+        "average": 21.753188
+      },
+      "backend_tokens": {
+        "prompt": 2414592,
+        "completion": 1430446
+      },
+      "peak_gpu_memory_mib": 28922,
+      "gpu": {
+        "samples": 383,
+        "average_utilization_percent": 86.462,
+        "peak_utilization_percent": 100,
+        "average_power_watts": 393.945,
+        "peak_power_watts": 447.53
+      },
+      "vllm": {
+        "samples": 180,
+        "peak_kv_cache_usage_percent": 7.618,
+        "peak_running_requests": 626,
+        "peak_waiting_requests": 81,
+        "preemptions": 0,
+        "prefix_cache_hit_rate_percent": 83.072
+      },
+      "status_counts": {
+        "200": 128
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true,
+      "max_num_seqs": 640,
+      "batch_workers": 20
+    },
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 128,
+      "text_items": 60,
+      "nonempty_items": 60,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 96.711,
+      "throughput_requests_per_second": 1.324,
+      "latency_ms": {
+        "min": 32855.739,
+        "p50": 48171.749,
+        "p95": 48593.168,
+        "p99": 48598.462,
+        "max": 48600.807
+      },
+      "queue_wait_seconds": {
+        "observations": 46080,
+        "average": 22.92644
+      },
+      "backend_tokens": {
+        "prompt": 2414592,
+        "completion": 1430287
+      },
+      "peak_gpu_memory_mib": 29102,
+      "gpu": {
+        "samples": 400,
+        "average_utilization_percent": 83.545,
+        "peak_utilization_percent": 100,
+        "average_power_watts": 383.78,
+        "peak_power_watts": 441.63
+      },
+      "vllm": {
+        "samples": 187,
+        "peak_kv_cache_usage_percent": 8.823,
+        "peak_running_requests": 764,
+        "peak_waiting_requests": 109,
+        "preemptions": 0,
+        "prefix_cache_hit_rate_percent": 82.988
+      },
+      "status_counts": {
+        "200": 128
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true,
+      "max_num_seqs": 768,
+      "batch_workers": 24
+    },
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 128,
+      "text_items": 60,
+      "nonempty_items": 60,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 97.978,
+      "throughput_requests_per_second": 1.306,
+      "latency_ms": {
+        "min": 3216.723,
+        "p50": 48228.574,
+        "p95": 49833.991,
+        "p99": 49843.656,
+        "max": 49845.313
+      },
+      "queue_wait_seconds": {
+        "observations": 46080,
+        "average": 22.135012
+      },
+      "backend_tokens": {
+        "prompt": 2414592,
+        "completion": 1429991
+      },
+      "peak_gpu_memory_mib": 29452,
+      "gpu": {
+        "samples": 405,
+        "average_utilization_percent": 83.951,
+        "peak_utilization_percent": 100,
+        "average_power_watts": 378.638,
+        "peak_power_watts": 437.02
+      },
+      "vllm": {
+        "samples": 188,
+        "peak_kv_cache_usage_percent": 12.15,
+        "peak_running_requests": 1015,
+        "peak_waiting_requests": 113,
+        "preemptions": 0,
+        "prefix_cache_hit_rate_percent": 83.023
+      },
+      "status_counts": {
+        "200": 128
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true,
+      "max_num_seqs": 1024,
+      "batch_workers": 32
     }
   ]
 }
