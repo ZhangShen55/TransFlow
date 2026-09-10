@@ -33,7 +33,7 @@ class ServerSettings(FrozenSettings):
 class ApiSettings(FrozenSettings):
     max_concurrent_requests: int = Field(default=64, ge=1)
     max_text_items: int = Field(default=120, ge=1)
-    max_target_languages: int = Field(default=7, ge=1)
+    max_target_languages: int = Field(default=6, ge=1)
     max_chars_per_text: int = Field(default=4096, ge=1)
     max_total_chars: int = Field(default=131_072, ge=1)
     request_timeout_seconds: float = Field(default=600.0, gt=0)
@@ -41,8 +41,8 @@ class ApiSettings(FrozenSettings):
 
 class SchedulerSettings(FrozenSettings):
     dispatch_chunk_size: int = Field(default=60, ge=1)
-    max_inflight_sequences: int = Field(default=256, ge=1)
-    max_pending_units: int = Field(default=26_880, ge=1)
+    max_inflight_sequences: int = Field(default=512, ge=1)
+    max_pending_units: int = Field(default=23_040, ge=1)
     shutdown_grace_seconds: float = Field(default=30.0, ge=0)
 
 
@@ -55,9 +55,9 @@ class InferenceSettings(FrozenSettings):
     max_retries: int = Field(default=1, ge=0, le=3)
     max_model_len: int = Field(default=4096, ge=256)
     batch_size: int = Field(default=32, ge=1)
-    batch_workers: int = Field(default=8, ge=1)
+    batch_workers: int = Field(default=16, ge=1)
     batch_wait_milliseconds: float = Field(default=2.0, ge=0)
-    max_connections: int = Field(default=8, ge=1)
+    max_connections: int = Field(default=16, ge=1)
 
     @field_validator("base_urls")
     @classmethod

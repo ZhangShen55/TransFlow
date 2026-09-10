@@ -12,13 +12,13 @@ def test_project_config_loads() -> None:
     settings = load_settings(CONFIG_PATH, environ={})
 
     assert settings.api.max_text_items == 120
-    assert settings.api.max_target_languages == 7
+    assert settings.api.max_target_languages == 6
     assert settings.scheduler.dispatch_chunk_size == 60
-    assert settings.scheduler.max_inflight_sequences == 256
-    assert settings.scheduler.max_pending_units == 26_880
+    assert settings.scheduler.max_inflight_sequences == 512
+    assert settings.scheduler.max_pending_units == 23_040
     assert settings.inference.batch_size == 32
-    assert settings.inference.batch_workers == 8
-    assert settings.inference.max_connections == 8
+    assert settings.inference.batch_workers == 16
+    assert settings.inference.max_connections == 16
     assert settings.inference.base_urls == ("http://127.0.0.1:8001/v1",)
 
 

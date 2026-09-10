@@ -27,7 +27,8 @@ docker run --rm --gpus device=0 \
   vllm/vllm-openai:v0.28.0 /model \
   --served-model-name Hy-MT2-1.8B \
   --trust-remote-code --dtype bfloat16 \
-  --max-model-len 4096 --gpu-memory-utilization 0.5
+  --max-model-len 4096 --gpu-memory-utilization 0.5 \
+  --max-num-seqs 512
 ```
 
 vLLM 会在冷启动期间编译并捕获 CUDA 图，整个过程可能超过一分钟。在模型端点健康前，`/health/ready` 会保持未就绪状态。
@@ -76,6 +77,8 @@ pytest -q
 真实模型测试和负载测试分别使用 `model`、`load` 标记，需要显式选择。容量测试结果见 `docs/benchmark-results.md`。
 
 ## Docker Compose 部署
+
+完整部署参数和运维命令见 `docker/README.md`。
 
 默认部署只构建 API 镜像，vLLM 服务直接使用已验证的官方镜像：
 

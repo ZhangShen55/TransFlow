@@ -32,11 +32,12 @@
 |---|---:|---|
 | `api.max_concurrent_requests` | 64 | 同时准入的 API 请求数 |
 | `api.max_text_items` | 120 | 单请求最大文本条数 |
-| `api.max_target_languages` | 7 | 单请求最大目标语言数 |
+| `api.max_target_languages` | 6 | 单请求最大目标语言数 |
 | `scheduler.dispatch_chunk_size` | 60 | 每轮释放的文本位置数 |
-| `scheduler.max_inflight_sequences` | 256 | 全局在途推理序列数 |
+| `scheduler.max_inflight_sequences` | 512 | 全局在途推理序列数 |
 | `inference.batch_size` | 32 | 单个 vLLM 批请求的会话数 |
-| `inference.batch_workers` | 8 | 并行批请求工作协程数 |
+| `inference.batch_workers` | 16 | 并行批请求工作协程数 |
+| `inference.max_connections` | 16 | vLLM HTTP 连接池上限 |
 | `api.request_timeout_seconds` | 600 | API 端到端期限（秒） |
 
 这些值来自本机 GPU 的渐进压测，不应在服务启动时自动探测到 OOM。更换 GPU、模型版本、最大文本长度或目标语言数量后，必须重新运行容量测试。
@@ -67,7 +68,7 @@ docker compose -f docker/compose.yaml \
 
 2026-09-10 将默认在途序列调整为 256，使用 12 种源语言的 60 条真实文本完成 64 并发、640 请求测试，共处理 230,400 个翻译单元。结果为 640/640 个 HTTP 200，总耗时 533.013 秒，P95 为 54.039 秒；KV Cache 峰值 2.797%，运行序列峰值 238，等待序列峰值 0，无超时、OOM、结构错误或容器重启。详细结果见 `docs/load-test-640-c64-text60-lang6-seqs256.md`。
 
-2026-09-10 使用相同多语种负载完成 `max_num_seqs=128/192/256/384/512/640/768/1024` A/B 测试，每档为 64 并发、128 请求。512 达到效率峰值，输出吞吐 15,712.520 token/秒，P95 为 46.320 秒，KV Cache 峰值 5.160%；640、768、1024 连续出现吞吐下降和延迟上升。全部候选均无错误、OOM 或 preemption；但尚未执行 512 的持续负载验证，因此当前默认值仍为 256。详细结果见 `docs/ab-max-num-seqs-c64-r128.md`。
+2026-09-10 使用相同多语种负载完成 `max_num_seqs=128/192/256/384/512/640/768/1024` A/B 测试，每档为 64 并发、128 请求。512 达到效率峰值，输出吞吐 15,712.520 token/秒，P95 为 46.320 秒，KV Cache 峰值 5.160%；640、768、1024 连续出现吞吐下降和延迟上升。全部候选均无错误、OOM 或 preemption，因此将 512、16 个批工作协程和 16 个 HTTP 连接设为默认拉起配置。详细结果见 `docs/ab-max-num-seqs-c64-r128.md`。
 
 详细压测数据见 `docs/benchmark-results.md`，本机原始 JSON 报告位于已被 Git 忽略的 `reports/`。
 
