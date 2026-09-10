@@ -1,0 +1,17 @@
+{
+  "model": "seaCraft-translation-model",
+  "id": "seaCraft-0199000000000000abcdef0123456789",
+  "result": {
+    "contents": [
+      {"content": ["", "最后几周啊，大家。", "你好", ""], "language": "zh"},
+      {"content": ["", "The last few weeks, everyone.", "Hello", ""], "language": "en"},
+      {"content": ["", "Ces dernières semaines, tout le monde.", "Bonjour", ""], "language": "fr"},
+      {"content": ["", "Las últimas semanas, todos.", "Hola", ""], "language": "es"},
+      {"content": ["", "Последние несколько недель, все.", "Привет", ""], "language": "ru"},
+      {"content": ["", "الأسابيع القليلة الماضية، الجميع.", "مرحبًا", ""], "language": "ar"}
+    ],
+    "finished_time": 1788998400,
+    "process_time_ms": 1888,
+    "finished_reason": "finished"
+  }
+}

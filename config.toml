@@ -1,0 +1,89 @@
+[server]
+# FastAPI 进程监听的网络接口。
+host = "0.0.0.0"
+# FastAPI 对外服务端口。
+port = 8000
+# 保持单进程，确保准入和调度限制在整个服务内统一生效。
+workers = 1
+
+[api]
+# 同时准入的同步请求上限；超出容量时返回 HTTP 429。
+max_concurrent_requests = 64
+# 单个请求允许的最大文本条数。
+max_text_items = 120
+# 单个请求允许的最大目标语言数。
+max_target_languages = 6
+# 单条文本的字符安全上限；需根据真实字幕长度分布调优。
+max_chars_per_text = 4096
+# 单个请求的字符总量上限，用于约束内存占用和响应延迟。
+max_total_chars = 131072
+# 请求端到端超时时间，单位为秒，包含队列等待时间。
+request_timeout_seconds = 600.0
+
+[scheduler]
+# 每轮调度释放的文本位置数；该值不是 GPU 批大小。
+dispatch_chunk_size = 60
+# 同时进入推理阶段的独立序列上限。
+max_inflight_sequences = 128
+# 内部翻译单元队列上限，可容纳每个已准入请求的一个分片。
+max_pending_units = 24576
+# 服务关闭时等待任务平稳结束的时间，单位为秒。
+shutdown_grace_seconds = 30.0
+
+[inference]
+# 兼容 OpenAI API 的 vLLM 端点；配置多个地址时按轮询方式使用副本。
+base_urls = ["http://127.0.0.1:8001/v1"]
+# 调用内部 vLLM API 时使用的模型名称。
+model_name = "Hy-MT2-1.8B"
+# 内部 API 密钥；vLLM 启用鉴权后应在部署环境中覆盖。
+api_key = "local"
+# 健康检查超时时间，单位为秒。
+health_timeout_seconds = 2.0
+# 单次后端推理请求超时时间，单位为秒。
+request_timeout_seconds = 300.0
+# 仅允许在推理请求被接受前发生的故障进行重试。
+max_retries = 1
+# vLLM 提供的上下文长度上限，会影响 KV 缓存容量。
+max_model_len = 4096
+# 单次 vLLM 批请求合并的独立会话数。
+batch_size = 32
+# 并行批请求工作协程数；与 batch_size 的乘积应覆盖在途序列数。
+batch_workers = 4
+# 收集并发翻译单元形成微批次的等待时间，单位为毫秒。
+batch_wait_milliseconds = 2.0
+# 可复用 HTTP 连接数，不应低于批请求工作协程数。
+max_connections = 8
+
+[generation]
+# 每条文本最多生成的翻译 token 数。
+max_tokens = 256
+# 设为零时使用确定性的贪心生成。
+temperature = 0.0
+# 核采样阈值；显式配置以保证结果可复现。
+top_p = 1.0
+# Top-k 采样限制；-1 表示禁用 Top-k 过滤。
+top_k = -1
+# 重复惩罚系数，不改变请求结果结构。
+repetition_penalty = 1.05
+# 后端采样随机种子。
+seed = 0
+
+[response]
+# `/translate` 响应中返回的公开模型名称。
+public_model_name = "seaCraft-translation-model"
+# 防碰撞请求 ID 的前缀。
+id_prefix = "seaCraft-"
+
+[logging]
+# 结构化日志的最低输出级别。
+level = "INFO"
+# 是否输出便于机器解析的 JSON 日志。
+json = true
+# 生产环境应保持为 false，避免记录原文和译文。
+include_text = false
+
+[metrics]
+# 是否启用 Prometheus 指标采集。
+enabled = true
+# 暴露 Prometheus 指标的 HTTP 路径。
+path = "/metrics"

@@ -1,0 +1,29 @@
+schema: spec-driven
+
+# 项目上下文会在创建和更新 OpenSpec 产物时提供给 AI。
+context: |
+  项目名称：TransFlow
+  技术栈：Python 3.12、FastAPI、Pydantic、httpx、vLLM、Docker Compose。
+  所有面向开发者和使用者的说明文字必须使用简体中文。
+  OpenSpec 的提案、设计、规格和任务必须使用简体中文；仅保留工具要求的固定结构关键字、代码标识符、协议字段、命令、路径及专有名词。
+
+# 各类 OpenSpec 产物的编写规则。
+rules:
+  proposal:
+    - 标题下的正文、能力说明和影响分析使用简体中文。
+  design:
+    - 设计背景、决策、权衡、风险和迁移计划使用简体中文。
+  specs:
+    - 需求名称、需求正文、场景名称和验收描述使用简体中文。
+    - 保留 OpenSpec 解析所需的 Requirement、Scenario、WHEN、THEN、MUST 等固定关键字，并在正文中同时给出中文含义。
+  tasks:
+    - 任务分组、实现步骤和验证条件使用简体中文。
+
+# 执行和归档 change 时的补充要求。
+operations:
+  apply:
+    guidance:
+      - 实现过程和结果摘要使用简体中文。
+  archive:
+    guidance:
+      - 归档结果和规格同步摘要使用简体中文。

@@ -1,0 +1,65 @@
+services:
+  vllm:
+    deploy:
+      resources:
+        reservations:
+          devices: !override
+            - driver: nvidia
+              device_ids: ["${TRANSFLOW_GPU_0:-0}"]
+              capabilities: [gpu]
+
+  vllm-gpu1:
+    image: vllm/vllm-openai:v0.28.0
+    command:
+      - /model
+      - --served-model-name
+      - Hy-MT2-1.8B
+      - --trust-remote-code
+      - --dtype
+      - bfloat16
+      - --tensor-parallel-size
+      - "1"
+      - --max-model-len
+      - "4096"
+      - --gpu-memory-utilization
+      - ${VLLM_GPU_MEMORY_UTILIZATION:-0.50}
+      - --max-num-seqs
+      - ${VLLM_MAX_NUM_SEQS:-128}
+      - --generation-config
+      - vllm
+      - --enable-request-id-headers
+      - --api-key
+      - ${VLLM_API_KEY:-local}
+    volumes:
+      - ${TRANSFLOW_MODEL_PATH:-../model/Hy-MT2-1.8B}:/model:ro
+    expose:
+      - "8000"
+    ipc: host
+    shm_size: 2gb
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${TRANSFLOW_GPU_1:-1}"]
+              capabilities: [gpu]
+    healthcheck:
+      test:
+        - CMD
+        - /usr/bin/python3
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 180s
+    restart: unless-stopped
+    networks:
+      - inference
+
+  api:
+    environment:
+      TRANSFLOW_INFERENCE__BASE_URLS: '["http://vllm:8000/v1","http://vllm-gpu1:8000/v1"]'
+    depends_on:
+      vllm-gpu1:
+        condition: service_healthy

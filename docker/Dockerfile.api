@@ -1,0 +1,29 @@
+FROM python:3.12.11-slim-bookworm
+
+ARG PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DEFAULT_TIMEOUT=300 \
+    PIP_INDEX_URL=${PIP_INDEX_URL}
+
+RUN groupadd --system transflow \
+    && useradd --system --gid transflow --create-home transflow
+
+WORKDIR /app
+
+COPY pyproject.toml README.md ./
+COPY src ./src
+COPY config.toml ./config.toml
+
+RUN python -m pip install .
+
+USER transflow
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=2)"]
+
+CMD ["uvicorn", "transflow.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
