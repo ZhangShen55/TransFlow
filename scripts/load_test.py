@@ -46,6 +46,16 @@ class VLLMMetricsSample:
     kv_cache_usage: float
     running_requests: float
     waiting_requests: float
+    preemptions: float
+    prefix_cache_queries: float
+    prefix_cache_hits: float
+
+
+@dataclass
+class GPUSample:
+    memory_mib: float
+    utilization_percent: float
+    power_watts: float
 
 
 def percentile(values: list[float], quantile: float) -> float:
@@ -124,24 +134,25 @@ def valid_shape(body: Any, payload: dict[str, Any]) -> bool:
         return False
 
 
-async def gpu_memory_mib(gpu_index: int) -> float:
+async def gpu_sample(gpu_index: int) -> GPUSample:
     process = await asyncio.create_subprocess_exec(
         "nvidia-smi",
         f"--id={gpu_index}",
-        "--query-gpu=memory.used",
+        "--query-gpu=memory.used,utilization.gpu,power.draw",
         "--format=csv,noheader,nounits",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
     )
     stdout, _ = await process.communicate()
     if process.returncode != 0:
-        return 0.0
-    return float(stdout.decode().strip().splitlines()[0])
+        return GPUSample(0.0, 0.0, 0.0)
+    values = stdout.decode().strip().splitlines()[0].split(",")
+    return GPUSample(*(float(value.strip()) for value in values))
 
 
-async def monitor_gpu(gpu_index: int, stop: asyncio.Event, samples: list[float]) -> None:
+async def monitor_gpu(gpu_index: int, stop: asyncio.Event, samples: list[GPUSample]) -> None:
     while not stop.is_set():
-        samples.append(await gpu_memory_mib(gpu_index))
+        samples.append(await gpu_sample(gpu_index))
         try:
             await asyncio.wait_for(stop.wait(), timeout=0.2)
         except TimeoutError:
@@ -162,6 +173,13 @@ async def monitor_vllm(
                         kv_cache_usage=labeled_metric_value(metrics, "vllm:kv_cache_usage_perc"),
                         running_requests=labeled_metric_value(metrics, "vllm:num_requests_running"),
                         waiting_requests=labeled_metric_value(metrics, "vllm:num_requests_waiting"),
+                        preemptions=labeled_metric_value(metrics, "vllm:num_preemptions_total"),
+                        prefix_cache_queries=labeled_metric_value(
+                            metrics, "vllm:prefix_cache_queries_total"
+                        ),
+                        prefix_cache_hits=labeled_metric_value(
+                            metrics, "vllm:prefix_cache_hits_total"
+                        ),
                     )
                 )
             except httpx.HTTPError:
@@ -251,7 +269,7 @@ async def run_profile(
             asyncio.create_task(send_request(client, payload, start, semaphore))
             for _ in range(request_count)
         ]
-        gpu_samples: list[float] = []
+        gpu_samples: list[GPUSample] = []
         stop_gpu = asyncio.Event()
         monitor = (
             asyncio.create_task(monitor_gpu(gpu_index, stop_gpu, gpu_samples))
@@ -315,7 +333,25 @@ async def run_profile(
                 - metric_value(before_metrics, "transflow_completion_tokens_total")
             ),
         },
-        "peak_gpu_memory_mib": max(gpu_samples, default=0.0),
+        "peak_gpu_memory_mib": max((sample.memory_mib for sample in gpu_samples), default=0.0),
+        "gpu": {
+            "samples": len(gpu_samples),
+            "average_utilization_percent": round(
+                sum(sample.utilization_percent for sample in gpu_samples) / len(gpu_samples),
+                3,
+            )
+            if gpu_samples
+            else 0.0,
+            "peak_utilization_percent": max(
+                (sample.utilization_percent for sample in gpu_samples), default=0.0
+            ),
+            "average_power_watts": round(
+                sum(sample.power_watts for sample in gpu_samples) / len(gpu_samples), 3
+            )
+            if gpu_samples
+            else 0.0,
+            "peak_power_watts": max((sample.power_watts for sample in gpu_samples), default=0.0),
+        },
         "vllm": {
             "samples": len(vllm_samples),
             "peak_kv_cache_usage_percent": round(
@@ -328,6 +364,21 @@ async def run_profile(
             "peak_waiting_requests": int(
                 max((sample.waiting_requests for sample in vllm_samples), default=0.0)
             ),
+            "preemptions": int(max(0.0, vllm_samples[-1].preemptions - vllm_samples[0].preemptions))
+            if vllm_samples
+            else 0,
+            "prefix_cache_hit_rate_percent": round(
+                100
+                * max(
+                    0.0,
+                    vllm_samples[-1].prefix_cache_hits - vllm_samples[0].prefix_cache_hits,
+                )
+                / (vllm_samples[-1].prefix_cache_queries - vllm_samples[0].prefix_cache_queries),
+                3,
+            )
+            if len(vllm_samples) > 1
+            and vllm_samples[-1].prefix_cache_queries > vllm_samples[0].prefix_cache_queries
+            else 0.0,
         },
         "status_counts": dict(sorted(statuses.items())),
         "errors": sum(observation.error is not None for observation in observations),

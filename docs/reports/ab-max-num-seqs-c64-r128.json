@@ -1,0 +1,313 @@
+{
+  "generated_at_unix": 1789035322,
+  "workload": {
+    "concurrency": 64,
+    "request_count_per_candidate": 128,
+    "text_items": 60,
+    "target_languages": [
+      "zh",
+      "en",
+      "fr",
+      "es",
+      "ru",
+      "ar"
+    ]
+  },
+  "candidates": [
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 128,
+      "text_items": 60,
+      "nonempty_items": 60,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 161.383,
+      "throughput_requests_per_second": 0.793,
+      "latency_ms": {
+        "min": 69307.033,
+        "p50": 80058.282,
+        "p95": 81336.681,
+        "p99": 81355.5,
+        "max": 81358.346
+      },
+      "queue_wait_seconds": {
+        "observations": 46080,
+        "average": 39.682816
+      },
+      "backend_tokens": {
+        "prompt": 2414592,
+        "completion": 1430048
+      },
+      "peak_gpu_memory_mib": 27788,
+      "gpu": {
+        "samples": 657,
+        "average_utilization_percent": 90.346,
+        "peak_utilization_percent": 100,
+        "average_power_watts": 356.634,
+        "peak_power_watts": 390.73
+      },
+      "vllm": {
+        "samples": 315,
+        "peak_kv_cache_usage_percent": 1.555,
+        "peak_running_requests": 124,
+        "peak_waiting_requests": 0,
+        "preemptions": 0,
+        "prefix_cache_hit_rate_percent": 83.043
+      },
+      "status_counts": {
+        "200": 128
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true,
+      "max_num_seqs": 128,
+      "batch_workers": 4
+    },
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 128,
+      "text_items": 60,
+      "nonempty_items": 60,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 122.049,
+      "throughput_requests_per_second": 1.049,
+      "latency_ms": {
+        "min": 54294.992,
+        "p50": 59990.525,
+        "p95": 62366.945,
+        "p99": 62375.843,
+        "max": 62380.105
+      },
+      "queue_wait_seconds": {
+        "observations": 46080,
+        "average": 29.800962
+      },
+      "backend_tokens": {
+        "prompt": 2414592,
+        "completion": 1430639
+      },
+      "peak_gpu_memory_mib": 27912,
+      "gpu": {
+        "samples": 498,
+        "average_utilization_percent": 91.787,
+        "peak_utilization_percent": 100,
+        "average_power_watts": 395.541,
+        "peak_power_watts": 429.94
+      },
+      "vllm": {
+        "samples": 238,
+        "peak_kv_cache_usage_percent": 2.144,
+        "peak_running_requests": 175,
+        "peak_waiting_requests": 0,
+        "preemptions": 0,
+        "prefix_cache_hit_rate_percent": 83.032
+      },
+      "status_counts": {
+        "200": 128
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true,
+      "max_num_seqs": 192,
+      "batch_workers": 6
+    },
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 128,
+      "text_items": 60,
+      "nonempty_items": 60,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 109.581,
+      "throughput_requests_per_second": 1.168,
+      "latency_ms": {
+        "min": 48990.298,
+        "p50": 54620.134,
+        "p95": 55733.422,
+        "p99": 55751.165,
+        "max": 55764.707
+      },
+      "queue_wait_seconds": {
+        "observations": 46080,
+        "average": 26.789258
+      },
+      "backend_tokens": {
+        "prompt": 2414592,
+        "completion": 1429677
+      },
+      "peak_gpu_memory_mib": 27944,
+      "gpu": {
+        "samples": 450,
+        "average_utilization_percent": 90.153,
+        "peak_utilization_percent": 100,
+        "average_power_watts": 400.918,
+        "peak_power_watts": 437.9
+      },
+      "vllm": {
+        "samples": 213,
+        "peak_kv_cache_usage_percent": 2.777,
+        "peak_running_requests": 243,
+        "peak_waiting_requests": 0,
+        "preemptions": 0,
+        "prefix_cache_hit_rate_percent": 83.032
+      },
+      "status_counts": {
+        "200": 128
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true,
+      "max_num_seqs": 256,
+      "batch_workers": 8
+    },
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 128,
+      "text_items": 60,
+      "nonempty_items": 60,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 96.336,
+      "throughput_requests_per_second": 1.329,
+      "latency_ms": {
+        "min": 29210.554,
+        "p50": 47237.752,
+        "p95": 49419.935,
+        "p99": 49424.243,
+        "max": 49431.949
+      },
+      "queue_wait_seconds": {
+        "observations": 46080,
+        "average": 23.207303
+      },
+      "backend_tokens": {
+        "prompt": 2414592,
+        "completion": 1431086
+      },
+      "peak_gpu_memory_mib": 28366,
+      "gpu": {
+        "samples": 398,
+        "average_utilization_percent": 91.201,
+        "peak_utilization_percent": 100,
+        "average_power_watts": 409.028,
+        "peak_power_watts": 443.98
+      },
+      "vllm": {
+        "samples": 187,
+        "peak_kv_cache_usage_percent": 3.943,
+        "peak_running_requests": 354,
+        "peak_waiting_requests": 32,
+        "preemptions": 0,
+        "prefix_cache_hit_rate_percent": 82.832
+      },
+      "status_counts": {
+        "200": 128
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true,
+      "max_num_seqs": 384,
+      "batch_workers": 12
+    },
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 128,
+      "text_items": 60,
+      "nonempty_items": 60,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 91.029,
+      "throughput_requests_per_second": 1.406,
+      "latency_ms": {
+        "min": 5579.842,
+        "p50": 44786.519,
+        "p95": 46319.702,
+        "p99": 46323.912,
+        "max": 46327.453
+      },
+      "queue_wait_seconds": {
+        "observations": 46080,
+        "average": 21.583945
+      },
+      "backend_tokens": {
+        "prompt": 2414592,
+        "completion": 1430295
+      },
+      "peak_gpu_memory_mib": 28746,
+      "gpu": {
+        "samples": 373,
+        "average_utilization_percent": 89.984,
+        "peak_utilization_percent": 100,
+        "average_power_watts": 408.478,
+        "peak_power_watts": 444.68
+      },
+      "vllm": {
+        "samples": 176,
+        "peak_kv_cache_usage_percent": 5.16,
+        "peak_running_requests": 496,
+        "peak_waiting_requests": 39,
+        "preemptions": 0,
+        "prefix_cache_hit_rate_percent": 83.05
+      },
+      "status_counts": {
+        "200": 128
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true,
+      "max_num_seqs": 512,
+      "batch_workers": 16
+    }
+  ]
+}
