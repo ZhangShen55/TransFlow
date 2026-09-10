@@ -17,7 +17,7 @@ services:
       - --gpu-memory-utilization
       - ${VLLM_GPU_MEMORY_UTILIZATION:-0.50}
       - --max-num-seqs
-      - ${VLLM_MAX_NUM_SEQS:-128}
+      - ${VLLM_MAX_NUM_SEQS:-256}
       - --generation-config
       - vllm
       - --enable-request-id-headers
@@ -59,7 +59,7 @@ services:
       TRANSFLOW_INFERENCE__API_KEY: ${VLLM_API_KEY:-local}
       TRANSFLOW_LOGGING__LEVEL: ${TRANSFLOW_LOG_LEVEL:-INFO}
       TRANSFLOW_SCHEDULER__DISPATCH_CHUNK_SIZE: ${TRANSFLOW_DISPATCH_CHUNK_SIZE:-60}
-      TRANSFLOW_SCHEDULER__MAX_INFLIGHT_SEQUENCES: ${TRANSFLOW_MAX_INFLIGHT_SEQUENCES:-128}
+      TRANSFLOW_SCHEDULER__MAX_INFLIGHT_SEQUENCES: ${TRANSFLOW_MAX_INFLIGHT_SEQUENCES:-256}
     depends_on:
       vllm:
         condition: service_healthy

@@ -12,7 +12,7 @@ max_concurrent_requests = 64
 # 单个请求允许的最大文本条数。
 max_text_items = 120
 # 单个请求允许的最大目标语言数。
-max_target_languages = 6
+max_target_languages = 7
 # 单条文本的字符安全上限；需根据真实字幕长度分布调优。
 max_chars_per_text = 4096
 # 单个请求的字符总量上限，用于约束内存占用和响应延迟。
@@ -23,10 +23,10 @@ request_timeout_seconds = 600.0
 [scheduler]
 # 每轮调度释放的文本位置数；该值不是 GPU 批大小。
 dispatch_chunk_size = 60
-# 同时进入推理阶段的独立序列上限。
-max_inflight_sequences = 128
-# 内部翻译单元队列上限，可容纳每个已准入请求的一个分片。
-max_pending_units = 24576
+# 同时进入推理阶段的独立序列上限；应与 vLLM 的 max-num-seqs 协同调优。
+max_inflight_sequences = 256
+# 内部翻译单元队列上限，可容纳 64 个请求各一个 60 x 7 的分片。
+max_pending_units = 26880
 # 服务关闭时等待任务平稳结束的时间，单位为秒。
 shutdown_grace_seconds = 30.0
 
@@ -48,7 +48,7 @@ max_model_len = 4096
 # 单次 vLLM 批请求合并的独立会话数。
 batch_size = 32
 # 并行批请求工作协程数；与 batch_size 的乘积应覆盖在途序列数。
-batch_workers = 4
+batch_workers = 8
 # 收集并发翻译单元形成微批次的等待时间，单位为毫秒。
 batch_wait_milliseconds = 2.0
 # 可复用 HTTP 连接数，不应低于批请求工作协程数。

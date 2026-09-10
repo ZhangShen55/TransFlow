@@ -32,11 +32,11 @@
 |---|---:|---|
 | `api.max_concurrent_requests` | 64 | 同时准入的 API 请求数 |
 | `api.max_text_items` | 120 | 单请求最大文本条数 |
-| `api.max_target_languages` | 6 | 单请求最大目标语言数 |
+| `api.max_target_languages` | 7 | 单请求最大目标语言数 |
 | `scheduler.dispatch_chunk_size` | 60 | 每轮释放的文本位置数 |
-| `scheduler.max_inflight_sequences` | 128 | 全局在途推理序列数 |
+| `scheduler.max_inflight_sequences` | 256 | 全局在途推理序列数 |
 | `inference.batch_size` | 32 | 单个 vLLM 批请求的会话数 |
-| `inference.batch_workers` | 4 | 并行批请求工作协程数 |
+| `inference.batch_workers` | 8 | 并行批请求工作协程数 |
 | `api.request_timeout_seconds` | 600 | API 端到端期限（秒） |
 
 这些值来自本机 GPU 的渐进压测，不应在服务启动时自动探测到 OOM。更换 GPU、模型版本、最大文本长度或目标语言数量后，必须重新运行容量测试。
@@ -59,11 +59,13 @@ docker compose -f docker/compose.yaml \
   -f docker/compose.multi-gpu.yaml config --quiet
 ```
 
-最近一次完整结果为 39 项测试通过，Ruff、Mypy、Docker Compose 配置和严格 OpenSpec 校验通过。
+最近一次代码结果为 40 项测试通过、1 项真实模型测试按环境条件跳过，Ruff 和 Mypy 检查通过。
 
 最大扇出验收配置为 64 个并发请求，每个请求包含 120 条非空文本和 6 个目标语言，共 46,080 个模型序列。结果为 64/64 个 HTTP 200，无超时、取消、OOM 或输出结构错误，总耗时 92.325 秒，P95 为 92.300 秒，观测峰值显存为 27,788 MiB。
 
 2026-09-10 完成 64 并发、6,400 请求持续负载测试。每个请求包含 60 条非空混合源语言文本和 6 个目标语言，共处理 2,304,000 个翻译单元。结果为 6,400/6,400 个 HTTP 200，总耗时 4,652.029 秒，吞吐 1.376 请求/秒，P95 为 47.462 秒，P99 为 47.643 秒，无超时、取消、OOM 或输出结构错误。详细结果见 `docs/load-test-6400-c64-text60-lang6.md`。
+
+2026-09-10 将默认在途序列调整为 256，使用 12 种源语言的 60 条真实文本完成 64 并发、640 请求测试，共处理 230,400 个翻译单元。结果为 640/640 个 HTTP 200，总耗时 533.013 秒，P95 为 54.039 秒；KV Cache 峰值 2.797%，运行序列峰值 238，等待序列峰值 0，无超时、OOM、结构错误或容器重启。详细结果见 `docs/load-test-640-c64-text60-lang6-seqs256.md`。
 
 详细压测数据见 `docs/benchmark-results.md`，本机原始 JSON 报告位于已被 Git 忽略的 `reports/`。
 

@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import json
 import math
+import re
 import time
 from collections import Counter
 from dataclasses import dataclass
@@ -40,6 +41,13 @@ class RequestObservation:
     error: str | None = None
 
 
+@dataclass
+class VLLMMetricsSample:
+    kv_cache_usage: float
+    running_requests: float
+    waiting_requests: float
+
+
 def percentile(values: list[float], quantile: float) -> float:
     if not values:
         return 0.0
@@ -56,6 +64,28 @@ def metric_value(metrics: str, name: str) -> float:
     return 0.0
 
 
+def labeled_metric_value(metrics: str, name: str) -> float:
+    """汇总同一指标的标签序列, 兼容单引擎与多引擎指标。"""
+    prefixes = (f"{name} ", f"{name}{{")
+    total = 0.0
+    for line in metrics.splitlines():
+        if not line.startswith(prefixes):
+            continue
+        try:
+            total += float(line.rsplit(" ", 1)[1])
+        except (IndexError, ValueError):
+            continue
+    return total
+
+
+def response_reports_oom(status: int, response_text: str) -> bool:
+    """只从服务端错误中识别明确的显存不足信息。"""
+    lowered = response_text.lower()
+    return status >= 500 and (
+        "out of memory" in lowered or re.search(r"\boom\b", lowered) is not None
+    )
+
+
 def build_payload(text_items: int, nonempty_items: int, languages: list[str]) -> dict[str, Any]:
     texts = [""] * text_items
     if nonempty_items:
@@ -64,6 +94,22 @@ def build_payload(text_items: int, nonempty_items: int, languages: list[str]) ->
             text_index = min(source_index * step, text_items - 1)
             texts[text_index] = SAMPLE_TEXTS[source_index % len(SAMPLE_TEXTS)]
     return {"text": texts, "language": languages}
+
+
+def load_texts(path: Path, limit: int | None) -> list[str]:
+    raw = path.read_text(encoding="utf-8").strip()
+    try:
+        parsed: Any = json.loads(raw)
+    except json.JSONDecodeError:
+        # 支持用户直接提供的 `"text": [...]` JSON 对象片段。
+        parsed = json.loads("{" + raw + "}")
+    texts = parsed.get("text") if isinstance(parsed, dict) else parsed
+    if not isinstance(texts, list) or not all(isinstance(item, str) for item in texts):
+        raise ValueError("文本文件必须是字符串数组，或包含字符串数组 text 的 JSON 对象")
+    selected = texts[:limit] if limit is not None else texts
+    if not selected:
+        raise ValueError("文本文件中没有可用于压测的文本")
+    return selected
 
 
 def valid_shape(body: Any, payload: dict[str, Any]) -> bool:
@@ -102,6 +148,30 @@ async def monitor_gpu(gpu_index: int, stop: asyncio.Event, samples: list[float])
             continue
 
 
+async def monitor_vllm(
+    metrics_url: str,
+    stop: asyncio.Event,
+    samples: list[VLLMMetricsSample],
+) -> None:
+    async with httpx.AsyncClient(timeout=5) as client:
+        while not stop.is_set():
+            try:
+                metrics = (await client.get(metrics_url)).text
+                samples.append(
+                    VLLMMetricsSample(
+                        kv_cache_usage=labeled_metric_value(metrics, "vllm:kv_cache_usage_perc"),
+                        running_requests=labeled_metric_value(metrics, "vllm:num_requests_running"),
+                        waiting_requests=labeled_metric_value(metrics, "vllm:num_requests_waiting"),
+                    )
+                )
+            except httpx.HTTPError:
+                pass
+            try:
+                await asyncio.wait_for(stop.wait(), timeout=0.5)
+            except TimeoutError:
+                continue
+
+
 async def get_metrics(client: httpx.AsyncClient) -> str:
     try:
         response = await client.get("/metrics", timeout=5)
@@ -129,7 +199,7 @@ async def send_request(
                 status=response.status_code,
                 shape_violation=response.status_code == 200 and not valid_shape(body, payload),
                 timeout=response.status_code == 504,
-                oom="out of memory" in response_text or "oom" in response_text,
+                oom=response_reports_oom(response.status_code, response_text),
                 error=None if response.status_code == 200 else response.text[:500],
             )
         except httpx.TimeoutException as exc:
@@ -163,6 +233,7 @@ async def run_profile(
     dispatch_size: int,
     timeout_seconds: float,
     gpu_index: int | None,
+    vllm_metrics_url: str | None,
 ) -> dict[str, Any]:
     limits = httpx.Limits(
         max_connections=max(concurrency, 1),
@@ -187,6 +258,12 @@ async def run_profile(
             if gpu_index is not None
             else None
         )
+        vllm_samples: list[VLLMMetricsSample] = []
+        vllm_monitor = (
+            asyncio.create_task(monitor_vllm(vllm_metrics_url, stop_gpu, vllm_samples))
+            if vllm_metrics_url is not None
+            else None
+        )
         started = time.perf_counter()
         start.set()
         observations = await asyncio.gather(*tasks)
@@ -194,6 +271,8 @@ async def run_profile(
         stop_gpu.set()
         if monitor is not None:
             await monitor
+        if vllm_monitor is not None:
+            await vllm_monitor
         after_metrics = await get_metrics(client)
         healthy_after = (await client.get("/health/live", timeout=5)).is_success
 
@@ -237,6 +316,19 @@ async def run_profile(
             ),
         },
         "peak_gpu_memory_mib": max(gpu_samples, default=0.0),
+        "vllm": {
+            "samples": len(vllm_samples),
+            "peak_kv_cache_usage_percent": round(
+                max((sample.kv_cache_usage for sample in vllm_samples), default=0.0) * 100,
+                3,
+            ),
+            "peak_running_requests": int(
+                max((sample.running_requests for sample in vllm_samples), default=0.0)
+            ),
+            "peak_waiting_requests": int(
+                max((sample.waiting_requests for sample in vllm_samples), default=0.0)
+            ),
+        },
         "status_counts": dict(sorted(statuses.items())),
         "errors": sum(observation.error is not None for observation in observations),
         "timeouts": sum(observation.timeout for observation in observations),
@@ -272,16 +364,23 @@ def parse_args() -> argparse.Namespace:
         "--timeout-seconds", type=float, default=900, help="单个 HTTP 请求超时时间，单位为秒"
     )
     parser.add_argument("--gpu-index", type=int, help="需要采集显存的 GPU 索引")
+    parser.add_argument("--text-file", type=Path, help="JSON 文本数组或包含 text 数组的文件")
+    parser.add_argument("--text-limit", type=int, help="从文本文件开头选取的最大条数")
+    parser.add_argument("--vllm-metrics-url", help="用于采集 KV Cache 和请求峰值的指标地址")
     parser.add_argument("--output", type=Path, help="JSON 报告输出路径")
     return parser.parse_args()
 
 
 async def async_main(args: argparse.Namespace) -> dict[str, Any]:
-    payload = build_payload(
-        args.text_items,
-        args.nonempty_items,
-        args.languages.split(","),
-    )
+    if args.text_file:
+        texts = load_texts(args.text_file, args.text_limit)
+        payload = {"text": texts, "language": args.languages.split(",")}
+    else:
+        payload = build_payload(
+            args.text_items,
+            args.nonempty_items,
+            args.languages.split(","),
+        )
     profiles = []
     for concurrency in parse_csv_ints(args.concurrency):
         request_count = args.requests_per_level or concurrency
@@ -294,6 +393,7 @@ async def async_main(args: argparse.Namespace) -> dict[str, Any]:
                 dispatch_size=args.dispatch_size,
                 timeout_seconds=args.timeout_seconds,
                 gpu_index=args.gpu_index,
+                vllm_metrics_url=args.vllm_metrics_url,
             )
         )
     return {
