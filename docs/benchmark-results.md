@@ -1,5 +1,7 @@
 # 容量测试结果
 
+最新的 64 并发、6,400 请求持续负载结果见 `docs/load-test-6400-c64-text60-lang6.md`，对应机器可读摘要位于 `docs/reports/load-6400-c64-text60-lang6.json`。
+
 测试于 2026-09-10 在本机 GPU 0 上完成，使用 Hy-MT2-1.8B、固定版本的 `vllm/vllm-openai:v0.28.0` 镜像、确定性生成、4096 模型长度、`gpu_memory_utilization=0.50`、128 个在途序列，以及由 4 个工作协程执行的 vLLM 批请求，每批最多包含 32 个会话。JSON 报告保存在已被 Git 忽略的本地 `reports/` 目录中。
 
 ## 调度分片对比

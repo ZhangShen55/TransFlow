@@ -1,0 +1,48 @@
+{
+  "generated_at_unix": 1789029421,
+  "base_url": "http://127.0.0.1:18000",
+  "profiles": [
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 6400,
+      "text_items": 60,
+      "nonempty_items": 60,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 4652.029,
+      "throughput_requests_per_second": 1.376,
+      "latency_ms": {
+        "min": 43033.78,
+        "p50": 46506.195,
+        "p95": 47462.17,
+        "p99": 47643.233,
+        "max": 47969.27
+      },
+      "queue_wait_seconds": {
+        "observations": 2304000,
+        "average": 23.196106
+      },
+      "backend_tokens": {
+        "prompt": 71424000,
+        "completion": 23745107
+      },
+      "peak_gpu_memory_mib": 27788.0,
+      "status_counts": {
+        "200": 6400
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true
+    }
+  ]
+}
