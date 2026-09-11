@@ -6,7 +6,7 @@ services:
     command:
       - /model
       - --served-model-name
-      - Hy-MT2-1.8B
+      - Hz-MT2
       - --trust-remote-code
       - --dtype
       - bfloat16
@@ -24,7 +24,7 @@ services:
       - --api-key
       - ${VLLM_API_KEY:-local}
     volumes:
-      - ${TRANSFLOW_MODEL_PATH:-../model/Hy-MT2-1.8B}:/model:ro
+      - ${TRANSFLOW_MODEL_PATH:-../model/Hz-MT2}:/model:ro
     expose:
       - "8000"
     ipc: host
@@ -67,6 +67,9 @@ services:
         condition: service_healthy
     ports:
       - "${TRANSFLOW_API_BIND:-0.0.0.0}:${TRANSFLOW_API_PORT:-8000}:8000"
+    volumes:
+      # 使用宿主机配置，修改 config.toml 后重建容器即可生效。
+      - ../config.toml:/app/config.toml:ro
     read_only: true
     tmpfs:
       - /tmp:size=64m
@@ -76,6 +79,9 @@ services:
       - inference
 
 networks:
-  edge: {}
+  # 不设置 external：网络存在时复用，不存在时由 Compose 创建。
+  edge:
+    name: transflow_edge
   inference:
+    name: transflow_inference
     internal: true

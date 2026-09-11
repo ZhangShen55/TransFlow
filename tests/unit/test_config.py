@@ -12,10 +12,10 @@ def test_project_config_loads() -> None:
     settings = load_settings(CONFIG_PATH, environ={})
 
     assert settings.api.max_text_items == 120
-    assert settings.api.max_target_languages == 6
+    assert settings.api.max_target_languages == 12
     assert settings.scheduler.dispatch_chunk_size == 60
     assert settings.scheduler.max_inflight_sequences == 512
-    assert settings.scheduler.max_pending_units == 23_040
+    assert settings.scheduler.max_pending_units == 46_080
     assert settings.inference.batch_size == 32
     assert settings.inference.batch_workers == 16
     assert settings.inference.max_connections == 16

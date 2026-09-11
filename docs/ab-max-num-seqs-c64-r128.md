@@ -38,7 +38,7 @@
 | 测试时间 | 2026-09-10 17:56:29 至 19:06:47（Asia/Shanghai） |
 | GPU | NVIDIA GeForce RTX 4090，49,140 MiB |
 | 驱动版本 | 580.126.09 |
-| 模型 | Hy-MT2-1.8B，BF16 |
+| 模型 | Hz-MT2，BF16 |
 | vLLM 镜像 ID | `sha256:609a5b463503f663bedc6a8045ef2aae530bf59c6dc20371c84b1d302fb6f9ca` |
 | 模型上下文 | 4,096 token |
 | GPU 显存利用率配置 | 0.50 |

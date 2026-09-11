@@ -10,9 +10,9 @@
 - Conda 环境：`transflow`
 - Web 框架：FastAPI 0.116.1
 - 推理服务：vLLM 0.28.0
-- 模型：Hy-MT2-1.8B
-- 模型源目录：`/var/model_llm/Hy-MT2-1.8B`
-- 项目模型入口：`model/Hy-MT2-1.8B`
+- 模型：Hz-MT2
+- 模型源目录：`/var/model_llm/Hz-MT2`
+- 项目模型入口：`model/Hz-MT2`
 - vLLM 镜像：`vllm/vllm-openai:v0.28.0`
 - 已验证镜像摘要前缀：`sha256:609a5b463503`
 
@@ -74,13 +74,13 @@ docker compose -f docker/compose.yaml \
 
 ## 当前部署
 
-- API：`http://127.0.0.1:18000`
-- 接口文档：`http://127.0.0.1:18000/docs`
-- 存活检查：`http://127.0.0.1:18000/health/live`
-- 就绪检查：`http://127.0.0.1:18000/health/ready`
-- 指标：`http://127.0.0.1:18000/metrics`
+- API：`http://127.0.0.1:8000`
+- 接口文档：`http://127.0.0.1:8000/docs`
+- 存活检查：`http://127.0.0.1:8000/health/live`
+- 就绪检查：`http://127.0.0.1:8000/health/ready`
+- 指标：`http://127.0.0.1:8000/metrics`
 
-端口 `18000` 是当前运行实例的部署覆盖值；代码默认端口仍为 `8000`。
+当前运行实例使用 Compose 默认端口 `8000`；也可以通过 `TRANSFLOW_API_PORT` 覆盖宿主机发布端口。
 
 ## 维护约束
 

@@ -1,6 +1,8 @@
 # Docker 部署说明
 
-本目录提供 TransFlow 的 API 镜像和 Docker Compose 部署文件。FastAPI 与 vLLM 分别运行在独立容器中，模型权重只读挂载到 vLLM，默认仅向宿主机公开 FastAPI 端口。
+本目录提供 TransFlow 的 API 镜像和 Docker Compose 部署文件。FastAPI 与 vLLM 分别运行在独立容器中，模型权重只读挂载到 vLLM，`config.toml` 只读挂载到 API，默认仅向宿主机公开 FastAPI 端口。
+
+Compose 使用固定名称的 `transflow_edge` 和 `transflow_inference` 网络。网络已存在时直接复用，不存在时自动创建，因此不需要手工创建网络，也不要将它们设置为 `external`。
 
 ## 文件说明
 
@@ -15,34 +17,41 @@
 - Docker Engine 支持 Compose V2，即可以执行 `docker compose version`。
 - 已安装 NVIDIA 驱动和 NVIDIA Container Toolkit。
 - `docker run --rm --gpus all nvidia/cuda:13.0.0-base-ubuntu24.04 nvidia-smi` 能识别目标 GPU。
-- 模型目录包含完整的 Hy-MT2-1.8B 权重、分词器和配置文件。
+- 模型目录包含完整的 Hz-MT2 权重、分词器和配置文件。
 - 所有命令均从项目根目录执行。
 
 ## 模型目录
 
-默认模型路径为项目内的 `model/Hy-MT2-1.8B`。模型内容已被 Git 和 Docker 构建上下文忽略，不会提交到仓库或复制进 API 镜像。
+默认模型路径为项目内的 `model/Hz-MT2`。模型内容已被 Git 和 Docker 构建上下文忽略，不会提交到仓库或复制进 API 镜像。
 
-如果模型位于 `/var/model_llm/Hy-MT2-1.8B`，启动时通过环境变量直接挂载：
+如果模型位于 `/var/model_llm/Hz-MT2`，启动时通过环境变量直接挂载：
 
 ```bash
-export TRANSFLOW_MODEL_PATH=/var/model_llm/Hy-MT2-1.8B
+export TRANSFLOW_MODEL_PATH=/var/model_llm/Hz-MT2
 ```
 
 Compose 会将该目录以只读方式挂载到 vLLM 容器的 `/model`。
+
+API 容器会将项目根目录的 `config.toml` 以只读方式挂载到 `/app/config.toml`。镜像构建时也会复制一份配置作为未使用 Compose 挂载时的后备；通过 Compose 运行时以宿主机文件为准。修改配置后需要重新创建 API 容器：
+
+```bash
+TRANSFLOW_API_PORT=18000 \
+docker compose -f docker/compose.yaml up -d --no-deps --force-recreate api
+```
 
 ## 单 GPU 启动
 
 默认使用 GPU 0，并将 FastAPI 发布到宿主机的 8000 端口：
 
 ```bash
-TRANSFLOW_MODEL_PATH=/var/model_llm/Hy-MT2-1.8B \
+TRANSFLOW_MODEL_PATH=/var/model_llm/Hz-MT2 \
 docker compose -f docker/compose.yaml up -d --build --wait
 ```
 
-当前服务器使用 18000 端口时执行：
+如果需要使用其他端口，可以通过 `TRANSFLOW_API_PORT` 覆盖；例如使用 18000 端口：
 
 ```bash
-TRANSFLOW_MODEL_PATH=/var/model_llm/Hy-MT2-1.8B \
+TRANSFLOW_MODEL_PATH=/var/model_llm/Hz-MT2 \
 TRANSFLOW_GPU_ID=0 \
 TRANSFLOW_API_PORT=18000 \
 docker compose -f docker/compose.yaml up -d --build --wait
@@ -78,7 +87,7 @@ VLLM_MAX_NUM_SEQS=256 \
 TRANSFLOW_MAX_INFLIGHT_SEQUENCES=256 \
 TRANSFLOW_BATCH_WORKERS=8 \
 TRANSFLOW_MAX_CONNECTIONS=8 \
-TRANSFLOW_MODEL_PATH=/var/model_llm/Hy-MT2-1.8B \
+TRANSFLOW_MODEL_PATH=/var/model_llm/Hz-MT2 \
 docker compose -f docker/compose.yaml up -d --force-recreate --wait
 ```
 
@@ -88,7 +97,7 @@ docker compose -f docker/compose.yaml up -d --force-recreate --wait
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `TRANSFLOW_MODEL_PATH` | `../model/Hy-MT2-1.8B` | 宿主机模型目录 |
+| `TRANSFLOW_MODEL_PATH` | `../model/Hz-MT2` | 宿主机模型目录 |
 | `TRANSFLOW_GPU_ID` | `0` | 单 GPU 部署使用的设备编号 |
 | `TRANSFLOW_API_BIND` | `0.0.0.0` | API 在宿主机上的绑定地址 |
 | `TRANSFLOW_API_PORT` | `8000` | API 在宿主机上的发布端口 |
@@ -171,7 +180,7 @@ docker compose -f docker/compose.yaml down
 双 GPU 覆盖会在 GPU 0 和 GPU 1 上分别运行一个模型副本，API 按轮询方式访问两个 vLLM 地址：
 
 ```bash
-TRANSFLOW_MODEL_PATH=/var/model_llm/Hy-MT2-1.8B \
+TRANSFLOW_MODEL_PATH=/var/model_llm/Hz-MT2 \
 TRANSFLOW_GPU_0=0 \
 TRANSFLOW_GPU_1=1 \
 docker compose \
@@ -215,4 +224,4 @@ docker compose \
 
 ### 修改 vLLM 镜像版本
 
-当前镜像 `vllm/vllm-openai:v0.28.0` 已针对 Hy-MT2-1.8B 验证。升级镜像、PyTorch、Transformers 或模型文件后，必须重新执行真实模型测试和容量测试。
+当前镜像 `vllm/vllm-openai:v0.28.0` 已针对 Hz-MT2 验证。升级镜像、PyTorch、Transformers 或模型文件后，必须重新执行真实模型测试和容量测试。

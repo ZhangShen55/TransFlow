@@ -15,7 +15,7 @@ TransFlow 在单 GPU、256 个最大在途序列配置下完成了 64 并发、6
 | 测试时间 | 2026-09-10 17:15:31 至 17:24:24（Asia/Shanghai） |
 | GPU | NVIDIA GeForce RTX 4090，49,140 MiB |
 | 驱动版本 | 580.126.09 |
-| 模型 | Hy-MT2-1.8B，BF16 |
+| 模型 | Hz-MT2，BF16 |
 | vLLM 镜像 | `vllm/vllm-openai:v0.28.0` |
 | 镜像 ID | `sha256:609a5b463503f663bedc6a8045ef2aae530bf59c6dc20371c84b1d302fb6f9ca` |
 | 模型上下文 | 4,096 token |

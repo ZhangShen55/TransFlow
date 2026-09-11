@@ -92,7 +92,7 @@ def create_app(
 
     app = FastAPI(
         title="TransFlow",
-        description="基于 Hy-MT2 的多语言翻译服务",
+        description="基于 Hz-MT2 的多语言翻译服务",
         version="0.1.0",
         lifespan=lifespan,
     )

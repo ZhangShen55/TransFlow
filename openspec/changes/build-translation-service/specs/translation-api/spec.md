@@ -20,7 +20,7 @@
 - **THEN** 服务返回 HTTP 422，并在校验错误中指出重复项
 
 ### Requirement: 支持的目标语言
-服务 MUST（必须）接受以下 Hy-MT2 目标语言代码：`zh`、`en`、`fr`、`pt`、`es`、`ja`、`tr`、`ru`、`ar`、`ko`、`th`、`it`、`de`、`vi`、`ms`、`id`、`tl`、`hi`、`zh-Hant`、`pl`、`cs`、`nl`、`km`、`my`、`fa`、`gu`、`ur`、`te`、`mr`、`he`、`bn`、`ta`、`uk`、`bo`、`kk`、`mn`、`ug` 和 `yue`。语言代码必须精确匹配，并映射为模型提示词需要的目标语言全名。
+服务 MUST（必须）接受以下 Hz-MT2 目标语言代码：`zh`、`en`、`fr`、`pt`、`es`、`ja`、`tr`、`ru`、`ar`、`ko`、`th`、`it`、`de`、`vi`、`ms`、`id`、`tl`、`hi`、`zh-Hant`、`pl`、`cs`、`nl`、`km`、`my`、`fa`、`gu`、`ur`、`te`、`mr`、`he`、`bn`、`ta`、`uk`、`bo`、`kk`、`mn`、`ug` 和 `yue`。语言代码必须精确匹配，并映射为模型提示词需要的目标语言全名。
 
 #### Scenario: 阿拉伯语使用标准代码
 - **WHEN** 客户端在 `language` 数组中包含 `ar`

@@ -3,7 +3,7 @@
 容量测试必须在指定且无其他负载的 GPU 上运行。使用待测的调度分片大小启动服务，并在报告中记录相同数值：
 
 ```bash
-TRANSFLOW_MODEL_PATH=/var/model_llm/Hy-MT2-1.8B \
+TRANSFLOW_MODEL_PATH=/var/model_llm/Hz-MT2 \
 TRANSFLOW_DISPATCH_CHUNK_SIZE=8 \
 TRANSFLOW_API_PORT=18000 \
 docker compose -f docker/compose.yaml up -d --wait --force-recreate api

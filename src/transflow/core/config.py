@@ -41,6 +41,7 @@ class ApiSettings(FrozenSettings):
 
 class SchedulerSettings(FrozenSettings):
     dispatch_chunk_size: int = Field(default=60, ge=1)
+    # 该值限制 FastAPI active 翻译单元，不代表上游请求数或等待队列容量。
     max_inflight_sequences: int = Field(default=512, ge=1)
     max_pending_units: int = Field(default=23_040, ge=1)
     shutdown_grace_seconds: float = Field(default=30.0, ge=0)
@@ -48,12 +49,11 @@ class SchedulerSettings(FrozenSettings):
 
 class InferenceSettings(FrozenSettings):
     base_urls: tuple[str, ...] = ("http://127.0.0.1:8001/v1",)
-    model_name: str = "Hy-MT2-1.8B"
+    model_name: str = "Hz-MT2"
     api_key: str = "local"
     health_timeout_seconds: float = Field(default=2.0, gt=0)
     request_timeout_seconds: float = Field(default=300.0, gt=0)
     max_retries: int = Field(default=1, ge=0, le=3)
-    max_model_len: int = Field(default=4096, ge=256)
     batch_size: int = Field(default=32, ge=1)
     batch_workers: int = Field(default=16, ge=1)
     batch_wait_milliseconds: float = Field(default=2.0, ge=0)
@@ -131,8 +131,6 @@ class Settings(FrozenSettings):
         )
         if self.scheduler.max_pending_units < minimum_pending:
             raise ValueError("scheduler.max_pending_units 必须能容纳每个已准入请求的一个调度分片")
-        if self.generation.max_tokens >= self.inference.max_model_len:
-            raise ValueError("generation.max_tokens 必须小于 inference.max_model_len")
         if self.inference.max_connections < self.inference.batch_workers:
             raise ValueError("inference.max_connections 不能小于 inference.batch_workers")
         batch_capacity = self.inference.batch_size * self.inference.batch_workers

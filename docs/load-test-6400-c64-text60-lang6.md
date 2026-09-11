@@ -17,7 +17,7 @@
 | API 地址 | `http://127.0.0.1:18000` |
 | GPU | NVIDIA GeForce RTX 4090，49,140 MiB |
 | 驱动版本 | `580.126.09` |
-| 模型 | Hy-MT2-1.8B，BF16 |
+| 模型 | Hz-MT2，BF16 |
 | vLLM 镜像 | `vllm/vllm-openai:v0.28.0` |
 | 镜像摘要 | `sha256:609a5b463503f663bedc6a8045ef2aae530bf59c6dc20371c84b1d302fb6f9ca` |
 | 模型上下文 | 4,096 token |

@@ -1,6 +1,6 @@
 # TransFlow
 
-TransFlow 是面向本地 Hy-MT2-1.8B 模型的 FastAPI 翻译编排服务。公开 API 会保持字幕式文本数组的顺序和长度，vLLM 则在 GPU 上对各个独立翻译单元进行连续批处理。
+TransFlow 是面向本地 Hz-MT2 模型的 FastAPI 翻译编排服务。公开 API 会保持字幕式文本数组的顺序和长度，vLLM 则在 GPU 上对各个独立翻译单元进行连续批处理。
 
 ## 本地运行
 
@@ -18,14 +18,14 @@ export TRANSFLOW_INFERENCE__BASE_URLS='["http://127.0.0.1:8001/v1"]'
 
 ## 模型服务
 
-将模型文件放置或链接到 `model/Hy-MT2-1.8B`，然后运行已验证的镜像：
+将模型文件放置或链接到 `model/Hz-MT2`，然后运行已验证的镜像：
 
 ```bash
 docker run --rm --gpus device=0 \
-  -v "$PWD/model/Hy-MT2-1.8B:/model:ro" \
+  -v "$PWD/model/Hz-MT2:/model:ro" \
   -p 127.0.0.1:8001:8000 \
   vllm/vllm-openai:v0.28.0 /model \
-  --served-model-name Hy-MT2-1.8B \
+  --served-model-name Hz-MT2 \
   --trust-remote-code --dtype bfloat16 \
   --max-model-len 4096 --gpu-memory-utilization 0.5 \
   --max-num-seqs 512
@@ -86,10 +86,10 @@ pytest -q
 docker compose -f docker/compose.yaml up --build
 ```
 
-模型路径默认为 `model/Hy-MT2-1.8B`。也可以通过环境变量直接挂载已有模型目录，无需复制权重：
+模型路径默认为 `model/Hz-MT2`。也可以通过环境变量直接挂载已有模型目录，无需复制权重：
 
 ```bash
-TRANSFLOW_MODEL_PATH=/var/model_llm/Hy-MT2-1.8B \
+TRANSFLOW_MODEL_PATH=/var/model_llm/Hz-MT2 \
   docker compose -f docker/compose.yaml up --build
 ```
 

@@ -1,6 +1,6 @@
 ## 背景
 
-仓库最初只有 OpenSpec 元数据，没有应用代码或依赖。开发环境为全新的 Python 3.12 Conda 环境 `transflow`。本地模型位于 `/var/model_llm/Hy-MT2-1.8B`，部署时通过已忽略的项目目录 `model/Hy-MT2-1.8B` 使用。
+仓库最初只有 OpenSpec 元数据，没有应用代码或依赖。开发环境为全新的 Python 3.12 Conda 环境 `transflow`。本地模型位于 `/var/model_llm/Hz-MT2`，部署时通过已忽略的项目目录 `model/Hz-MT2` 使用。
 
 现有镜像 `vllm/vllm-openai:v0.28.0`（`sha256:609a5b463503...`）已在本机完成冒烟验证。镜像包含 vLLM 0.28.0、Transformers 5.15.1、带 CUDA 13.0 的 PyTorch 2.13.0，能够识别 `HunYuanDenseV1ForCausalLM`、加载本地模型，并通过 `/v1/chat/completions` 返回正确译文。在 4,096 token 模型长度和 `gpu_memory_utilization=0.5` 配置下，模型加载约占用 3.43 GiB，vLLM 分配约 19.2 GiB KV 缓存。冷启动包含编译过程，耗时超过一分钟。
 
@@ -18,7 +18,7 @@
 
 **非目标：**
 
-- 训练、微调或量化 Hy-MT2。
+- 训练、微调或量化 Hz-MT2。
 - 身份认证、计费、持久化、后台任务或跨主机分布式队列。
 - 流式返回部分译文，或从 `/translate` 返回部分成功结果。
 - 服务启动时通过不断探测直到 OOM 来自动选择生产 GPU 限制。
@@ -33,7 +33,7 @@ FastAPI 和 vLLM 作为两个独立服务运行：
 ```text
 调用方 --> FastAPI /translate --> 有界调度器 --> vLLM /v1/chat/completions
                |                                      |
-               +--> 响应组装                          +--> Hy-MT2-1.8B
+               +--> 响应组装                          +--> Hz-MT2
 ```
 
 API 镜像由 `docker/Dockerfile.api` 构建。Compose 直接引用 `vllm/vllm-openai:v0.28.0`，只要该镜像保持兼容，就无需 `Dockerfile.vllm`。这样可以避免 API 镜像携带 CUDA 依赖，允许两个服务独立进行就绪检查和重启，也为每个 GPU 运行一个模型副本留出空间。单容器进程管理方案会将模型冷启动与 API 重启耦合，并使健康检查和扩容语义不清，因此不采用。
@@ -69,9 +69,9 @@ vLLM 客户端还会通过已验证的 `/v1/chat/completions/batch` 端点微批
 
 客户端断开或请求到期时，取消会传递到排队任务，并尽可能使用后端请求标识中止活动的 vLLM 生成。任一单元失败都会使公开请求原子失败。仅重试能够确认发生在推理请求被接受前的故障；不重试超时，避免重复执行仍在运行的高开销任务。
 
-### 由 Hy-MT2 判断各条源语言
+### 由 Hz-MT2 判断各条源语言
 
-将每个受支持的 API 代码映射到目标语言全名，并使用模型文档规定的指令要求仅返回译文。不增加独立源语言检测器，因为短字幕片段经常存在歧义，而 Hy-MT2 可以在没有显式源语言字段时进行多语言翻译。即使非空文本看似已使用目标语言，也始终提交模型处理，以符合约定响应示例。
+将每个受支持的 API 代码映射到目标语言全名，并使用模型文档规定的指令要求仅返回译文。不增加独立源语言检测器，因为短字幕片段经常存在歧义，而 Hz-MT2 可以在没有显式源语言字段时进行多语言翻译。即使非空文本看似已使用目标语言，也始终提交模型处理，以符合约定响应示例。
 
 不发送系统提示词，因为模型文档未作此要求。每次后端调用都显式发送生成控制参数，避免模型镜像中的 `generation_config.json` 静默改变服务行为。初始配置采用确定性生成和有界输出 token；生产前通过质量与负载测试对比厂商推荐的采样参数。
 
@@ -92,7 +92,7 @@ vLLM 客户端还会通过已验证的 `/v1/chat/completions/batch` 端点微批
 使用以下部署结构：
 
 ```text
-model/Hy-MT2-1.8B/        本地权重，已忽略
+model/Hz-MT2/        本地权重，已忽略
 docker/Dockerfile.api     仅包含 FastAPI 的镜像
 docker/compose.yaml       API 与已验证的 vLLM 镜像
 docker/compose.multi-gpu.yaml
@@ -123,7 +123,7 @@ docker/compose.multi-gpu.yaml
 ## 迁移计划
 
 1. 在现有空仓库中创建 Python 包、类型化配置、确定性模拟后端和契约测试。
-2. 将 Hy-MT2 文件放置到已忽略的 `model/Hy-MT2-1.8B`，添加 API 镜像和 Compose 部署文件。
+2. 将 Hz-MT2 文件放置到已忽略的 `model/Hz-MT2`，添加 API 镜像和 Compose 部署文件。
 3. 在可用 GPU 上启动已验证的 vLLM 镜像，等待就绪，并运行模型冒烟与多语言契约测试。
 4. 在无其他负载的 GPU 上运行渐进负载矩阵，保存报告，并根据成功方案设置生产调度、token、超时和显存参数。
 5. 使用就绪控制进行部署，在启用全部上游流量前监控队列、延迟、超时和 GPU 指标。

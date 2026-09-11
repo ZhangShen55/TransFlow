@@ -13,7 +13,7 @@ services:
     command:
       - /model
       - --served-model-name
-      - Hy-MT2-1.8B
+      - Hz-MT2
       - --trust-remote-code
       - --dtype
       - bfloat16
@@ -31,7 +31,7 @@ services:
       - --api-key
       - ${VLLM_API_KEY:-local}
     volumes:
-      - ${TRANSFLOW_MODEL_PATH:-../model/Hy-MT2-1.8B}:/model:ro
+      - ${TRANSFLOW_MODEL_PATH:-../model/Hz-MT2}:/model:ro
     expose:
       - "8000"
     ipc: host

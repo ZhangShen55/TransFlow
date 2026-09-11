@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "transflow"
 version = "0.1.0"
-description = "面向 Hy-MT2 的 FastAPI 翻译编排服务"
+description = "面向 Hz-MT2 的 FastAPI 翻译编排服务"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
@@ -42,7 +42,7 @@ addopts = "-ra --strict-markers"
 asyncio_mode = "auto"
 testpaths = ["tests"]
 markers = [
-  "model: 需要正在运行的 Hy-MT2 vLLM 端点",
+  "model: 需要正在运行的 Hz-MT2 vLLM 端点",
   "load: 容量与性能测试",
 ]
 
