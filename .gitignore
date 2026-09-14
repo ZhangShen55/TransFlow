@@ -11,6 +11,7 @@ dist/
 build/
 .env
 .venv/
+test/
 
 # 模型权重单独部署，禁止提交到 Git。
 model/*
