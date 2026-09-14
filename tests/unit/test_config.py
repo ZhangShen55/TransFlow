@@ -19,7 +19,7 @@ def test_project_config_loads() -> None:
     assert settings.inference.batch_size == 32
     assert settings.inference.batch_workers == 16
     assert settings.inference.max_connections == 16
-    assert settings.inference.base_urls == ("http://127.0.0.1:8001/v1",)
+    assert settings.inference.base_urls == ("http://vllm:8000/v1",)
 
 
 def test_environment_override_is_typed() -> None:

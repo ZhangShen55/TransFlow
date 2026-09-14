@@ -41,7 +41,7 @@ docker compose -f docker/compose.yaml up -d --no-deps --force-recreate api
 
 ## 单 GPU 启动
 
-默认使用 GPU 0，并将 FastAPI 发布到宿主机的 8000 端口：
+默认使用 GPU 0，并将 FastAPI 发布到宿主机的 8001 端口：
 
 ```bash
 TRANSFLOW_MODEL_PATH=/var/model_llm/Hz-MT2 \
@@ -100,7 +100,7 @@ docker compose -f docker/compose.yaml up -d --force-recreate --wait
 | `TRANSFLOW_MODEL_PATH` | `../model/Hz-MT2` | 宿主机模型目录 |
 | `TRANSFLOW_GPU_ID` | `0` | 单 GPU 部署使用的设备编号 |
 | `TRANSFLOW_API_BIND` | `0.0.0.0` | API 在宿主机上的绑定地址 |
-| `TRANSFLOW_API_PORT` | `8000` | API 在宿主机上的发布端口 |
+| `TRANSFLOW_API_PORT` | `8001` | API 在宿主机上的发布端口 |
 | `VLLM_API_KEY` | `local` | API 容器调用 vLLM 的内部密钥 |
 | `VLLM_GPU_MEMORY_UTILIZATION` | `0.50` | vLLM GPU 显存利用率 |
 | `VLLM_MAX_NUM_SEQS` | `512` | vLLM 最大运行序列数 |
@@ -123,17 +123,17 @@ docker compose -f docker/compose.yaml ps
 检查 API：
 
 ```bash
-curl -fsS http://127.0.0.1:8000/health/live
-curl -fsS http://127.0.0.1:8000/health/ready
-curl -fsS http://127.0.0.1:8000/metrics
+curl -fsS http://127.0.0.1:8001/health/live
+curl -fsS http://127.0.0.1:8001/health/ready
+curl -fsS http://127.0.0.1:8001/metrics
 ```
 
-使用 18000 端口启动时，将上述地址中的 8000 替换为 18000。接口文档位于 `/docs`。
+使用 18000 端口启动时，将上述地址中的 8001 替换为 18000。接口文档位于 `/docs`。
 
 发送翻译请求：
 
 ```bash
-curl -fsS http://127.0.0.1:8000/translate \
+curl -fsS http://127.0.0.1:8001/translate \
   -H 'Content-Type: application/json' \
   -d '{
     "text": ["", "最后几周啊，大家。", "Hello"],
@@ -224,4 +224,13 @@ docker compose \
 
 ### 修改 vLLM 镜像版本
 
-当前镜像 `vllm/vllm-openai:v0.28.0` 已针对 Hz-MT2 验证。升级镜像、PyTorch、Transformers 或模型文件后，必须重新执行真实模型测试和容量测试。
+Compose 不显式指定 `--dtype`，由 vLLM 使用默认的 `auto` 根据模型配置和 GPU 选择计算精度。当前 Hz-MT2 模型配置声明为 BF16；如果目标 GPU 不支持 BF16，且 vLLM 启动失败，应在 Compose 的 vLLM `command` 中加入以下两行后重新启动：
+
+```yaml
+- --dtype
+- float16
+```
+
+当前默认部署不读取 `VLLM_DTYPE` 环境变量。切换精度后必须重新执行真实模型测试和容量测试。
+
+当前镜像 `vllm/vllm-openai:v0.28.0` 已针对 Hz-MT2 验证。升级镜像、PyTorch、Transformers 或模型文件后，也必须重新执行真实模型测试和容量测试。

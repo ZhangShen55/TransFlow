@@ -11,11 +11,11 @@ max_concurrent_requests = 64
 # 单个请求允许的最大文本条数。
 max_text_items = 120
 # 单个请求允许的最大目标语言数，只是限制翻译语种数，并不会限制指定语种
-# zh: 简体中文，en: 英语，fr: 法语，pt: 葡萄牙语，es: 西班牙语，ja: 日语，ru: 俄语，ar: 阿拉伯语，ko: 韩语，th: 泰语，it: 意大利语，de: 德语
+# zh、en、fr、pt、es、ja、ru、ar、ko、th、it、de
 max_target_languages = 12
-# 单条文本的字符安全上限；需根据真实字幕长度分布调优。
+# text单条文本的字符安全上限，4096为放开
 max_chars_per_text = 4096
-# 单个请求的字符总量上限，用于约束内存占用和响应延迟。
+# 单个请求的字符总量上限，放开
 max_total_chars = 131072
 # 请求端到端超时时间，单位为秒，包含队列等待时间。
 request_timeout_seconds = 600.0
@@ -32,15 +32,10 @@ max_pending_units = 46080
 shutdown_grace_seconds = 30.0
 
 [inference]
-# 兼容 OpenAI API 的 vLLM 端点；配置多个地址时按轮询方式使用副本。
-base_urls = ["http://127.0.0.1:8001/v1"]
-# 调用内部 vLLM API 时使用的模型名称。
+base_urls = ["http://vllm:8000/v1"]
 model_name = "Hz-MT2"
-# 内部 API 密钥；vLLM 启用鉴权后应在部署环境中覆盖。
 api_key = "local"
-# 健康检查超时时间，单位为秒。
 health_timeout_seconds = 2.0
-# 单次后端推理请求超时时间，单位为秒。
 request_timeout_seconds = 300.0
 # 仅允许在推理请求被接受前发生的故障进行重试。
 max_retries = 1

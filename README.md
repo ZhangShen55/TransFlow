@@ -26,7 +26,7 @@ docker run --rm --gpus device=0 \
   -p 127.0.0.1:8001:8000 \
   vllm/vllm-openai:v0.28.0 /model \
   --served-model-name Hz-MT2 \
-  --trust-remote-code --dtype bfloat16 \
+  --trust-remote-code \
   --max-model-len 4096 --gpu-memory-utilization 0.5 \
   --max-num-seqs 512
 ```

@@ -48,7 +48,7 @@ class SchedulerSettings(FrozenSettings):
 
 
 class InferenceSettings(FrozenSettings):
-    base_urls: tuple[str, ...] = ("http://127.0.0.1:8001/v1",)
+    base_urls: tuple[str, ...] = ("http://vllm:8000/v1",)
     model_name: str = "Hz-MT2"
     api_key: str = "local"
     health_timeout_seconds: float = Field(default=2.0, gt=0)

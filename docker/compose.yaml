@@ -8,8 +8,6 @@ services:
       - --served-model-name
       - Hz-MT2
       - --trust-remote-code
-      - --dtype
-      - bfloat16
       - --tensor-parallel-size
       - "1"
       - --max-model-len
@@ -66,7 +64,7 @@ services:
       vllm:
         condition: service_healthy
     ports:
-      - "${TRANSFLOW_API_BIND:-0.0.0.0}:${TRANSFLOW_API_PORT:-8000}:8000"
+      - "${TRANSFLOW_API_BIND:-0.0.0.0}:${TRANSFLOW_API_PORT:-8001}:8000"
     volumes:
       # 使用宿主机配置，修改 config.toml 后重建容器即可生效。
       - ../config.toml:/app/config.toml:ro
