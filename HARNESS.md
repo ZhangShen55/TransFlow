@@ -70,17 +70,19 @@ docker compose -f docker/compose.yaml \
 
 2026-09-10 使用相同多语种负载完成 `max_num_seqs=128/192/256/384/512/640/768/1024` A/B 测试，每档为 64 并发、128 请求。512 达到效率峰值，输出吞吐 15,712.520 token/秒，P95 为 46.320 秒，KV Cache 峰值 5.160%；640、768、1024 连续出现吞吐下降和延迟上升。全部候选均无错误、OOM 或 preemption，因此将 512、16 个批工作协程和 16 个 HTTP 连接设为默认拉起配置。详细结果见 `docs/ab-max-num-seqs-c64-r128.md`。
 
-详细压测数据见 `docs/benchmark-results.md`，本机原始 JSON 报告位于已被 Git 忽略的 `reports/`。
+详细压测数据见 `docs/benchmark-results.md`，已提交的真实课程测试原始 JSON 报告位于 `docs/reports/`。
+
+2026-09-14 使用真实课程转写样本完成 60、70、80 条文本/请求的 64 并发、600 秒持续测试。每条文本翻译为 6 种目标语言，vLLM 使用约 16GB 显存预算。三档分别完成 897、768、651 个请求，全部 HTTP 200；KV Cache 峰值为 10.6%-10.8%，无超时、取消、OOM 或 preemption。按 335 个片段折算，4090D 约为 900-950 节课程等效量/小时。3090 和 4070 Ti Super 的 430-580、480-620 节/小时为独占 GPU 估算值，不是实测值，换卡后必须重新压测。详细结果见 `docs/course-real-load-test-16gb.md`。
 
 ## 当前部署
 
-- API：`http://127.0.0.1:8000`
-- 接口文档：`http://127.0.0.1:8000/docs`
-- 存活检查：`http://127.0.0.1:8000/health/live`
-- 就绪检查：`http://127.0.0.1:8000/health/ready`
-- 指标：`http://127.0.0.1:8000/metrics`
+- API：`http://127.0.0.1:8001`
+- 接口文档：`http://127.0.0.1:8001/docs`
+- 存活检查：`http://127.0.0.1:8001/health/live`
+- 就绪检查：`http://127.0.0.1:8001/health/ready`
+- 指标：`http://127.0.0.1:8001/metrics`
 
-当前运行实例使用 Compose 默认端口 `8000`；也可以通过 `TRANSFLOW_API_PORT` 覆盖宿主机发布端口。
+当前运行实例使用 Compose 默认端口 `8001`；也可以通过 `TRANSFLOW_API_PORT` 覆盖宿主机发布端口。
 
 ## 维护约束
 
