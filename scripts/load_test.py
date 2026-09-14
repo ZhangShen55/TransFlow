@@ -127,6 +127,27 @@ def load_texts(path: Path, limit: int | None) -> list[str]:
     return selected
 
 
+def load_payloads(path: Path) -> list[dict[str, Any]]:
+    """载入每个请求独立的 payload, 避免多并发请求重复同一前缀。"""
+    parsed: Any = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(parsed, list) or not parsed:
+        raise ValueError("payload 文件必须是非空 JSON 数组")
+    payloads: list[dict[str, Any]] = []
+    for payload in parsed:
+        if not isinstance(payload, dict):
+            raise ValueError("payload 文件中的每一项必须是 JSON 对象")
+        texts = payload.get("text")
+        languages = payload.get("language")
+        if not isinstance(texts, list) or not all(isinstance(item, str) for item in texts):
+            raise ValueError("payload 的 text 必须是字符串数组")
+        if not isinstance(languages, list) or not all(
+            isinstance(item, str) for item in languages
+        ):
+            raise ValueError("payload 的 language 必须是字符串数组")
+        payloads.append({"text": texts, "language": languages})
+    return payloads
+
+
 def valid_shape(body: Any, payload: dict[str, Any]) -> bool:
     try:
         contents = body["result"]["contents"]
@@ -258,6 +279,7 @@ async def run_profile(
     timeout_seconds: float,
     gpu_index: int | None,
     vllm_metrics_url: str | None,
+    payloads: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     limits = httpx.Limits(
         max_connections=max(concurrency, 1),
@@ -272,17 +294,29 @@ async def run_profile(
         start = asyncio.Event()
         semaphore = asyncio.Semaphore(concurrency)
         observations: list[RequestObservation] = []
+        request_payloads = payloads or [payload]
+        payload_cursor = 0
 
         async def run_sustained_worker(stop: asyncio.Event) -> None:
+            nonlocal payload_cursor
             while not stop.is_set():
-                observations.append(await send_request(client, payload, start, semaphore))
+                request_payload = request_payloads[payload_cursor % len(request_payloads)]
+                payload_cursor += 1
+                observations.append(await send_request(client, request_payload, start, semaphore))
 
         stop_requests = asyncio.Event()
         tasks: list[asyncio.Task[Any]]
         if duration_seconds is None:
             tasks = [
-                asyncio.create_task(send_request(client, payload, start, semaphore))
-                for _ in range(request_count or 0)
+                asyncio.create_task(
+                    send_request(
+                        client,
+                        request_payloads[index % len(request_payloads)],
+                        start,
+                        semaphore,
+                    )
+                )
+                for index in range(request_count or 0)
             ]
         else:
             tasks = [
@@ -335,6 +369,7 @@ async def run_profile(
         "request_count": completed_request_count,
         "request_target": request_count,
         "duration_seconds": duration_seconds,
+        "payload_count": len(request_payloads),
         "text_items": len(payload["text"]),
         "nonempty_items": sum(value != "" for value in payload["text"]),
         "languages": payload["language"],
@@ -453,6 +488,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="JSON 文本数组、包含 text 数组的文件，或包含 segments[].text 的课程转写文件",
     )
+    parser.add_argument(
+        "--payloads-file",
+        type=Path,
+        help="包含多个独立请求 payload 的 JSON 数组；会覆盖 --text-file",
+    )
     parser.add_argument("--text-limit", type=int, help="从文本文件开头选取的最大条数")
     parser.add_argument("--vllm-metrics-url", help="用于采集 KV Cache 和请求峰值的指标地址")
     parser.add_argument("--output", type=Path, help="JSON 报告输出路径")
@@ -460,7 +500,11 @@ def parse_args() -> argparse.Namespace:
 
 
 async def async_main(args: argparse.Namespace) -> dict[str, Any]:
-    if args.text_file:
+    payloads: list[dict[str, Any]] | None = None
+    if args.payloads_file:
+        payloads = load_payloads(args.payloads_file)
+        payload = payloads[0]
+    elif args.text_file:
         texts = load_texts(args.text_file, args.text_limit)
         payload = {"text": texts, "language": args.languages.split(",")}
     else:
@@ -484,6 +528,7 @@ async def async_main(args: argparse.Namespace) -> dict[str, Any]:
                 concurrency=concurrency,
                 request_count=request_count,
                 duration_seconds=args.duration_seconds,
+                payloads=payloads,
                 payload=payload,
                 dispatch_size=args.dispatch_size,
                 timeout_seconds=args.timeout_seconds,

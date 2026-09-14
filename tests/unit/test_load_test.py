@@ -34,3 +34,17 @@ def test_load_texts_accepts_course_segments(tmp_path: Path) -> None:
     )
 
     assert LOAD_TEST.load_texts(source, None) == ["第一句", "second"]
+
+
+def test_load_payloads_accepts_independent_requests(tmp_path: Path) -> None:
+    source = tmp_path / "payloads.json"
+    source.write_text(
+        '[{"text": ["第一句"], "language": ["zh"]}, '
+        '{"text": ["second"], "language": ["en"]}]',
+        encoding="utf-8",
+    )
+
+    assert LOAD_TEST.load_payloads(source) == [
+        {"text": ["第一句"], "language": ["zh"]},
+        {"text": ["second"], "language": ["en"]},
+    ]
