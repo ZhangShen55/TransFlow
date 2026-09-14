@@ -24,3 +24,13 @@ def test_load_texts_accepts_json_fragment(tmp_path: Path) -> None:
     source.write_text('"text": ["一", "two", "ثلاثة"]', encoding="utf-8")
 
     assert LOAD_TEST.load_texts(source, 2) == ["一", "two"]
+
+
+def test_load_texts_accepts_course_segments(tmp_path: Path) -> None:
+    source = tmp_path / "course.json"
+    source.write_text(
+        '{"segments": [{"text": "第一句"}, {"text": "second"}]}',
+        encoding="utf-8",
+    )
+
+    assert LOAD_TEST.load_texts(source, None) == ["第一句", "second"]

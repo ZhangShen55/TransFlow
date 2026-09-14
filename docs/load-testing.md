@@ -41,6 +41,22 @@ conda run -n transflow python scripts/load_test.py \
   --output reports/load-real-text.json
 ```
 
+课程语音转写文件也可以直接使用；工具会按文件中 `segments[].text` 的顺序提取文本。需要连续压测固定时长时，使用 `--duration-seconds`，每个并发 worker 完成一个请求后会继续发送下一个请求。例如 64 并发、600 秒、每请求取 60 条课程片段：
+
+```bash
+conda run -n transflow python scripts/load_test.py \
+  --base-url http://127.0.0.1:8001 \
+  --dispatch-size 60 \
+  --concurrency 64 \
+  --duration-seconds 600 \
+  --text-file test/1节课语音转写.json \
+  --text-limit 60 \
+  --languages zh,en,fr,es,ru,ar \
+  --gpu-index 0 \
+  --vllm-metrics-url "http://${VLLM_IP}:8000/metrics" \
+  --output docs/reports/course-real-60-c64-600s.json
+```
+
 测试不同在途序列时，必须同步调整 vLLM、应用调度器、批工作协程和连接数。例如 512 档使用：
 
 ```bash

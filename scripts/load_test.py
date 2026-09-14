@@ -113,7 +113,12 @@ def load_texts(path: Path, limit: int | None) -> list[str]:
     except json.JSONDecodeError:
         # 支持用户直接提供的 `"text": [...]` JSON 对象片段。
         parsed = json.loads("{" + raw + "}")
-    texts = parsed.get("text") if isinstance(parsed, dict) else parsed
+    if isinstance(parsed, dict):
+        texts = parsed.get("text")
+        if texts is None and isinstance(parsed.get("segments"), list):
+            texts = [segment.get("text") for segment in parsed["segments"]]
+    else:
+        texts = parsed
     if not isinstance(texts, list) or not all(isinstance(item, str) for item in texts):
         raise ValueError("文本文件必须是字符串数组，或包含字符串数组 text 的 JSON 对象")
     selected = texts[:limit] if limit is not None else texts
@@ -246,7 +251,8 @@ async def run_profile(
     *,
     base_url: str,
     concurrency: int,
-    request_count: int,
+    request_count: int | None,
+    duration_seconds: float | None,
     payload: dict[str, Any],
     dispatch_size: int,
     timeout_seconds: float,
@@ -265,10 +271,24 @@ async def run_profile(
         before_metrics = await get_metrics(client)
         start = asyncio.Event()
         semaphore = asyncio.Semaphore(concurrency)
-        tasks = [
-            asyncio.create_task(send_request(client, payload, start, semaphore))
-            for _ in range(request_count)
-        ]
+        observations: list[RequestObservation] = []
+
+        async def run_sustained_worker(stop: asyncio.Event) -> None:
+            while not stop.is_set():
+                observations.append(await send_request(client, payload, start, semaphore))
+
+        stop_requests = asyncio.Event()
+        tasks: list[asyncio.Task[Any]]
+        if duration_seconds is None:
+            tasks = [
+                asyncio.create_task(send_request(client, payload, start, semaphore))
+                for _ in range(request_count or 0)
+            ]
+        else:
+            tasks = [
+                asyncio.create_task(run_sustained_worker(stop_requests))
+                for _ in range(concurrency)
+            ]
         gpu_samples: list[GPUSample] = []
         stop_gpu = asyncio.Event()
         monitor = (
@@ -284,7 +304,12 @@ async def run_profile(
         )
         started = time.perf_counter()
         start.set()
-        observations = await asyncio.gather(*tasks)
+        if duration_seconds is None:
+            observations = list(await asyncio.gather(*tasks))
+        else:
+            await asyncio.sleep(duration_seconds)
+            stop_requests.set()
+            await asyncio.gather(*tasks)
         elapsed = time.perf_counter() - started
         stop_gpu.set()
         if monitor is not None:
@@ -296,6 +321,7 @@ async def run_profile(
 
     latencies = [observation.latency_ms for observation in observations]
     statuses = Counter(str(observation.status) for observation in observations)
+    completed_request_count = len(observations)
     # Prometheus 计数器是进程累计值，报告只记录本轮压测前后的差值。
     queue_sum = metric_value(
         after_metrics, "transflow_inference_queue_wait_seconds_sum"
@@ -306,12 +332,14 @@ async def run_profile(
     return {
         "dispatch_size": dispatch_size,
         "concurrency": concurrency,
-        "request_count": request_count,
+        "request_count": completed_request_count,
+        "request_target": request_count,
+        "duration_seconds": duration_seconds,
         "text_items": len(payload["text"]),
         "nonempty_items": sum(value != "" for value in payload["text"]),
         "languages": payload["language"],
         "elapsed_seconds": round(elapsed, 3),
-        "throughput_requests_per_second": round(request_count / elapsed, 3),
+        "throughput_requests_per_second": round(completed_request_count / elapsed, 3),
         "latency_ms": {
             "min": round(min(latencies), 3),
             "p50": percentile(latencies, 0.50),
@@ -406,6 +434,11 @@ def parse_args() -> argparse.Namespace:
         "--requests-per-level", type=int, default=0, help="每个并发级别的请求数；0 表示与并发量相同"
     )
     parser.add_argument(
+        "--duration-seconds",
+        type=float,
+        help="持续压测时长，设置后每个并发 worker 会循环发送请求",
+    )
+    parser.add_argument(
         "--dispatch-size", type=int, required=True, help="服务使用的调度分片大小，仅用于记录"
     )
     parser.add_argument("--text-items", type=int, default=120, help="每个请求的文本位置总数")
@@ -415,7 +448,11 @@ def parse_args() -> argparse.Namespace:
         "--timeout-seconds", type=float, default=900, help="单个 HTTP 请求超时时间，单位为秒"
     )
     parser.add_argument("--gpu-index", type=int, help="需要采集显存的 GPU 索引")
-    parser.add_argument("--text-file", type=Path, help="JSON 文本数组或包含 text 数组的文件")
+    parser.add_argument(
+        "--text-file",
+        type=Path,
+        help="JSON 文本数组、包含 text 数组的文件，或包含 segments[].text 的课程转写文件",
+    )
     parser.add_argument("--text-limit", type=int, help="从文本文件开头选取的最大条数")
     parser.add_argument("--vllm-metrics-url", help="用于采集 KV Cache 和请求峰值的指标地址")
     parser.add_argument("--output", type=Path, help="JSON 报告输出路径")
@@ -434,12 +471,19 @@ async def async_main(args: argparse.Namespace) -> dict[str, Any]:
         )
     profiles = []
     for concurrency in parse_csv_ints(args.concurrency):
-        request_count = args.requests_per_level or concurrency
+        if args.duration_seconds is not None and args.duration_seconds <= 0:
+            raise ValueError("--duration-seconds 必须大于 0")
+        request_count = (
+            None
+            if args.duration_seconds is not None
+            else (args.requests_per_level or concurrency)
+        )
         profiles.append(
             await run_profile(
                 base_url=args.base_url,
                 concurrency=concurrency,
                 request_count=request_count,
+                duration_seconds=args.duration_seconds,
                 payload=payload,
                 dispatch_size=args.dispatch_size,
                 timeout_seconds=args.timeout_seconds,

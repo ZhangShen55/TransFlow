@@ -1,0 +1,65 @@
+{
+  "generated_at_unix": 1789370244,
+  "base_url": "http://127.0.0.1:8001",
+  "profiles": [
+    {
+      "dispatch_size": 60,
+      "concurrency": 64,
+      "request_count": 768,
+      "request_target": null,
+      "duration_seconds": 600.0,
+      "text_items": 70,
+      "nonempty_items": 70,
+      "languages": [
+        "zh",
+        "en",
+        "fr",
+        "es",
+        "ru",
+        "ar"
+      ],
+      "elapsed_seconds": 637.384,
+      "throughput_requests_per_second": 1.205,
+      "latency_ms": {
+        "min": 43455.046,
+        "p50": 53260.823,
+        "p95": 54637.656,
+        "p99": 54911.587,
+        "max": 55148.676
+      },
+      "queue_wait_seconds": {
+        "observations": 322560,
+        "average": 19.017218
+      },
+      "backend_tokens": {
+        "prompt": 12370944,
+        "completion": 10013410
+      },
+      "peak_gpu_memory_mib": 19706.0,
+      "gpu": {
+        "samples": 2639,
+        "average_utilization_percent": 92.419,
+        "peak_utilization_percent": 100.0,
+        "average_power_watts": 423.654,
+        "peak_power_watts": 448.79
+      },
+      "vllm": {
+        "samples": 1234,
+        "peak_kv_cache_usage_percent": 10.721,
+        "peak_running_requests": 457,
+        "peak_waiting_requests": 51,
+        "preemptions": 0,
+        "prefix_cache_hit_rate_percent": 78.009
+      },
+      "status_counts": {
+        "200": 768
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "cancellations": 0,
+      "cardinality_violations": 0,
+      "oom_events": 0,
+      "service_healthy_after": true
+    }
+  ]
+}
