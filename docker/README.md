@@ -8,7 +8,7 @@ Compose 使用固定名称的 `transflow_edge` 和 `transflow_inference` 网络�
 
 | 文件 | 用途 |
 |---|---|
-| `Dockerfile.api` | 构建轻量 FastAPI 镜像，不包含 CUDA、vLLM 或模型权重 |
+| `Dockerfile.api` | 使用 Cython 构建轻量 FastAPI 镜像，不包含 CUDA、vLLM 或模型权重 |
 | `compose.yaml` | 单 GPU 默认部署，一个 API 容器和一个 vLLM 容器 |
 | `compose.multi-gpu.yaml` | 双 GPU 覆盖配置，增加第二个独立 vLLM 副本 |
 
@@ -31,6 +31,8 @@ export TRANSFLOW_MODEL_PATH=/var/model_llm/Hz-MT2
 ```
 
 Compose 会将该目录以只读方式挂载到 vLLM 容器的 `/model`。
+
+API 镜像构建阶段会使用 Cython 将 `src/transflow` 的业务模块编译为 CPython 扩展，运行阶段不携带 gcc、Cython 和业务模块 `.py` 源码。修改 Python 业务代码后必须重新构建 API 镜像；运行容器内不适合直接使用 Python 源码级调试工具。
 
 API 容器会将项目根目录的 `config.toml` 以只读方式挂载到 `/app/config.toml`。镜像构建时也会复制一份配置作为未使用 Compose 挂载时的后备；通过 Compose 运行时以宿主机文件为准。修改配置后需要重新创建 API 容器：
 
