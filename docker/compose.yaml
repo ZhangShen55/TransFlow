@@ -49,9 +49,7 @@ services:
       - inference
 
   api:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.api
+    image: transflow:v2_260915
     environment:
       TRANSFLOW_INFERENCE__BASE_URLS: '["http://vllm:8000/v1"]'
       TRANSFLOW_INFERENCE__API_KEY: ${VLLM_API_KEY:-local}
