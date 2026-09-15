@@ -47,16 +47,29 @@ SUPPORTED_LANGUAGES: Final = MappingProxyType(
     }
 )
 
+LANGUAGE_ALIASES: Final = MappingProxyType(
+    {
+        # 部分上游系统将阿拉伯语错误写作 ra, 这里兼容后统一使用标准代码 ar。
+        "ra": "ar",
+    }
+)
+
+
+def normalize_language_code(code: str) -> str:
+    """将上游别名转换为服务内部使用的标准语言代码。"""
+    return LANGUAGE_ALIASES.get(code, code)
+
 
 def target_language_name(code: str) -> str:
+    normalized = normalize_language_code(code)
     try:
-        return SUPPORTED_LANGUAGES[code]
+        return SUPPORTED_LANGUAGES[normalized]
     except KeyError as exc:
         raise ValueError(f"不支持的目标语言：{code}") from exc
 
 
 def validate_language_codes(codes: Iterable[str]) -> tuple[str, ...]:
-    normalized = tuple(codes)
+    normalized = tuple(normalize_language_code(code) for code in codes)
     duplicates = sorted({code for code in normalized if normalized.count(code) > 1})
     if duplicates:
         raise ValueError(f"目标语言重复：{', '.join(duplicates)}")

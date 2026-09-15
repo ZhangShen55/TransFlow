@@ -2,6 +2,7 @@ import pytest
 
 from transflow.domain.languages import (
     SUPPORTED_LANGUAGES,
+    normalize_language_code,
     target_language_name,
     validate_language_codes,
 )
@@ -12,14 +13,17 @@ def test_all_documented_languages_have_full_names() -> None:
     assert all(SUPPORTED_LANGUAGES.values())
 
 
-def test_arabic_code_is_ar() -> None:
+def test_arabic_alias_is_normalized_to_ar() -> None:
     assert target_language_name("ar") == "阿拉伯语"
-    with pytest.raises(ValueError, match="不支持"):
-        target_language_name("ra")
+    assert target_language_name("ra") == "阿拉伯语"
+    assert normalize_language_code("ra") == "ar"
+    assert validate_language_codes(["ra"]) == ("ar",)
 
 
 def test_duplicate_and_unknown_languages_are_rejected() -> None:
     with pytest.raises(ValueError, match="重复"):
         validate_language_codes(["en", "en"])
+    with pytest.raises(ValueError, match="重复"):
+        validate_language_codes(["ar", "ra"])
     with pytest.raises(ValueError, match="不支持"):
         validate_language_codes(["xx"])

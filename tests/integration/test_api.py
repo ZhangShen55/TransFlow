@@ -68,7 +68,7 @@ async def test_translate_contract_and_empty_positions() -> None:
 @pytest.mark.asyncio
 async def test_validation_errors_are_structured() -> None:
     async with api_client(FakeInferenceBackend()) as client:
-        unsupported = await client.post("/translate", json={"text": ["hello"], "language": ["ra"]})
+        unsupported = await client.post("/translate", json={"text": ["hello"], "language": ["xx"]})
         too_many = await client.post(
             "/translate",
             json={"text": ["hello"] * 121, "language": ["en"]},
@@ -77,7 +77,7 @@ async def test_validation_errors_are_structured() -> None:
 
     assert unsupported.status_code == 422
     assert unsupported.json()["error"]["code"] == "validation_error"
-    assert "不支持的目标语言：ra" in unsupported.json()["error"]["message"]
+    assert "不支持的目标语言：xx" in unsupported.json()["error"]["message"]
     assert too_many.status_code == 422
     assert malformed.status_code == 422
     assert malformed.json()["error"]["message"] == "请求参数校验失败：text: 至少需要 1 项"

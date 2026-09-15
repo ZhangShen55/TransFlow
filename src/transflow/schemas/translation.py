@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from transflow.core.config import ApiSettings
-from transflow.domain.languages import validate_language_codes
+from transflow.domain.languages import normalize_language_code, validate_language_codes
 
 
 class ApiModel(BaseModel):
@@ -17,6 +17,16 @@ class TranslateRequest(ApiModel):
 
     text: list[str] = Field(min_length=1, title="待翻译文本数组")
     language: list[str] = Field(min_length=1, title="目标语言代码数组")
+
+    @field_validator("language", mode="before")
+    @classmethod
+    def normalize_languages(cls, value: object) -> object:
+        if isinstance(value, list | tuple):
+            return [
+                normalize_language_code(item) if isinstance(item, str) else item
+                for item in value
+            ]
+        return value
 
     @field_validator("language")
     @classmethod
